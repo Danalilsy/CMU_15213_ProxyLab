@@ -101,9 +101,10 @@ int main(int argc, char **argv)
     while (1) {
 	    clientlen = sizeof(clientaddr);
         connfd = malloc(sizeof(int));
-	    *connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen); 
+	    *connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+        Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
         printf("Accepted connection from (%s, %s)\n", hostname, port);
-//#include <string.h>
+
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
