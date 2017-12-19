@@ -52,13 +52,14 @@ int main(int argc, char **argv)
     pthread_t tid;
 
     /* Check command line args */
-    if (argc != 4) {
-	    fprintf(stderr, "usage: %s <listen-port> <fake-ip> <www-ip>\n", argv[0]);
+    if (argc != 5) {
+	    fprintf(stderr, "usage: %s <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
-    listen_port = argv[1];
-    fake_ip = argv[2];
-    www_ip = argv[3];
+    alpha = argv[1];
+    listen_port = argv[2];
+    fake_ip = argv[3];
+    www_ip = argv[4];
     printf("fake_ip = %s\n", fake_ip);
     printf("www_ip = %s\n", www_ip);
     sem_init(&mutex, 0, 1);
@@ -190,7 +191,8 @@ void doit(int fd)
         return;
     }
     // other requests
-    
+    char uri_choose_bitrate[MAXLINE];
+    choose_bitrate(uri, uri_choose_bitrate);
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
@@ -214,9 +216,43 @@ void doit(int fd)
     printf("chunk_size = %f Kb\n",(float)chunk_size*8/1000);
     throughput_new=(float)chunk_size*8000/time_use;
     printf("throughput_new = %f Kbps\n",throughput_new);
+    if(throughput_current == 0)
+        throughput_current = bitrate_array[0];
+    else
+        throughput_current = alpha * throughput_new + (1 - alpha) * throughput_current;
+    printf("throughput_current = %f Kbps\n",throughput_current);
     close(serverfd);
-    
-    
+}
+void choose_bitrate(char *uri, char *uri_choose_bitrate){
+    int i;
+    int choosen_bitrate = 0;
+    for(i = bitrate_cnt - 1; i >= 0; i--){
+        if(throughput_current / 1.5 >= bitrate_array[i]){
+            choosen_bitrate = bitrate_array[i];
+        }
+    }
+    char *p;
+    int len_1 = 0;
+    int len_2 = 0;
+    for(p = uri; *p; p++){
+        if(strncmp(p, "Seg", strlen("Seg")) == 0){
+            break;
+        }
+    }
+    p--;
+    len_1 = p - uri;
+    while(*p >= '0' && *p =< '9'){
+        p--;
+    }
+    len_2 = sizeof(uri) - (p - uri);
+    char *uri_part_1, *uri_part_2;
+    char *uri_choose_bitrate;
+    strncpy(uri_part_1, uri, len_1);
+    strncpy(uri_part_2, p, len_2);
+    itoa(choosen_bitrate, uri_choose_bitrate, 10);
+    printf("part1=%s\n",uri_part_1);
+    printf("part2=%s\n",uri_part_2);
+    printf("uri_choose_bitrate=%s\n",uri_choose_bitrate);
 }
 /* $end doit */
 void parse_bitrates(char *xml){
