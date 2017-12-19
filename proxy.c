@@ -253,7 +253,7 @@ void doit(int fd)
     // server-ip = www_ip
     // chunkname = uri_choose_bitrate
     
-    if((fp = fopen(log_filename,"a+")) == NULL){
+    if((fp = fopen(log_filename,"w+")) == NULL){
         printf("file cannot be opened/n");
         return;
     }
