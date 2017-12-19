@@ -267,6 +267,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     printf("part1=%s\n",uri_part_1);
     printf("part2=%s\n",uri_part_2);
     printf("uri_choose_bitrate=%s\n",uri_bitrate);
+    printf("out choose bitrate\n");
 }
 /* $end doit */
 void parse_bitrates(char *xml){
