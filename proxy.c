@@ -153,8 +153,8 @@ void doit(int fd)
         strcpy(hostname,www_ip);
     }
     else{
-        fprintf(stderr, "wrong hostname\n");
-        return;
+        fprintf(stderr, "reverse proxy mode\n");
+        strcpy(hostname,www_ip);
     }
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
@@ -183,8 +183,8 @@ void doit(int fd)
             strcpy(hostname,www_ip);
         }
         else{
-            fprintf(stderr, "wrong hostname\n");
-            return;
+            fprintf(stderr, "reverse proxy mode\n");
+            strcpy(hostname,www_ip);
         }
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
@@ -211,8 +211,8 @@ void doit(int fd)
         strcpy(hostname,www_ip);
     }
     else{
-        fprintf(stderr, "wrong hostname\n");
-        return;
+        fprintf(stderr, "reverse proxy mode\n");
+        strcpy(hostname,www_ip);
     }
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
