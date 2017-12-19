@@ -155,7 +155,7 @@ void doit(int fd)
             strcpy(xml, ser_response);
             parse_bitrates(xml);
             printf("xml_nolist=\n%s",xml_nolist);
-            Rio_writen(fd, ser_response, len);//sizeof
+            Rio_writen(fd, xml_nolist, sizeof(xml_nolist));//sizeof
             int i;
             for(i=0;i<bitrate_cnt;i++){
                 printf("bitrate = %d\n",bitrate_array[i]);
@@ -215,6 +215,8 @@ void parse_bitrates(char *xml){
     strncpy(xml_nolist, xml, media_index);
     strcat(xml_nolist, "\n</manifest>\r\n\0");
 }
+
+
 int uri_found_f4m(char *uri, char *uri_nolist){
     char uri_tmp[MAXLINE];
     strcpy(uri_tmp, uri);
