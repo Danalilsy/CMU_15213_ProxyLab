@@ -247,16 +247,19 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     char *p;
     int len_1 = 0;
     int len_2 = 0;
+    int flag = 0;
     for(p = uri; *p; p++){
         if(strncmp(p, "Seg", strlen("Seg")) == 0){
+            flag = 1;
             break;
         }
     }
+    if(flag==0) return;
     p--;
     len_1 = p - uri;
     printf("len1=%d\n", len_1);
     
-    if(len_1 == sizeof(uri)) return;
+    
     while(*p >= '0' && *p <= '9'){
         p--;
     }
