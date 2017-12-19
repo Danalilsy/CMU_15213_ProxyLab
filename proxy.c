@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     strcpy(www_ip, argv[3]);
     printf("fake_ip = %s\n",fake_ip);
     printf("www_ip = %s\n",www_ip);
-    proxy_init();
+    sem_init(&mutex, 0, 1);
     listenfd = Open_listenfd(argv[1]);
     while (1) {
 	    clientlen = sizeof(clientaddr);
@@ -67,16 +67,6 @@ int main(int argc, char **argv)
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
-}
-
-/*
- * proxy_init
- * initialize the whole proxy
- */
-void proxy_init()
-{
-    sem_init(&mutex, 0, 1);
-    
 }
 
 /*
@@ -138,13 +128,13 @@ void doit(int fd)
     strcpy(filename, uri);
     sprintf(buf2ser, "%s %s %s\r\n", method, filename, version);
     printf("proxy to server: %s\n", buf2ser);
-    if(strcmp(hostname,))
+    //if(strcmp(hostname,))
     // request header
     request_hdr(buf, buf2ser, hostname);
 
     // step2 : from proxy to server
-    sprintf(port2, "%d", 8080);
-    if((serverfd = open_clientfd_bind_fakeip(hostname, port2, fake_ip)) < 0)
+    sprintf(port2, "%d", *port);
+    if((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0)
     {
         fprintf(stderr, "open server fd error\n");
         return;
@@ -168,7 +158,7 @@ void doit(int fd)
 }
 /* $end doit */
 /* $begin open_clientfd_bind_fakeip */
-int open_clientfd_bind_fakeip(char *hostname, char *port, char *fake_ip) {
+int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
     int clientfd;
     struct addrinfo hints, *listp, *p;
     
@@ -199,6 +189,8 @@ int open_clientfd_bind_fakeip(char *hostname, char *port, char *fake_ip) {
         return clientfd;
 }
 /* $end open_clientfd */
+
+
 /*
  * request_hdr - request header
  * if the request does not contain header, add request header
