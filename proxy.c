@@ -35,7 +35,6 @@ char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
-struct timeval start_epoch;
 struct timeval start;
 struct timeval end;
 float throughput_current = 0;
@@ -43,7 +42,6 @@ float throughput_new = 0;
 FILE *fp;
 int main(int argc, char **argv) 
 {
-    gettimeofday(&start_epoch, NULL);
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
 
     int listenfd;
@@ -245,10 +243,8 @@ void doit(int fd)
     close(serverfd);
     
     // output log
-    float time_epoch = (end.tv_sec-start_epoch.tv_sec)*1000000+(end.tv_usec-start_epoch.tv_usec);
-    time_epoch = time_epoch/1000000;
+    float time_epoch = end.tv_sec+end.tv_usec/1000000;
     float time_duration = time_use/1000000;
-    
     // tput = throughput_new;
     // avg-tput = throughput_current;
     // bitrate = rate
