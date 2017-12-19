@@ -1,10 +1,43 @@
+/*
+ *  Proxylab
+ *
+ *  Auther: Tianyu Chen
+ *  Andrew ID: tianyuc
+ *  Email: tianyuc@andrew.cmu.edu
+ *
+ *  [Brief Description]: 
+ *    This is a basic proxy, which acts as a server when connecting to a 
+ *  client and acts as a client when connecting to remote web servers. And 
+ *  it can deal with multiple concurrent requests. Finally, a cache with LRU
+ *  rule is added to improve the function of this proxy.
+ *
+ *    The proxy works well on the following pages: 
+ *      – http://www.cs.cmu.edu/˜213
+ *      – http://csapp.cs.cmu.edu
+ *      – http://www.cmu.edu
+ *      – http://www.amazon.com
+ *      - http://www.youtube.com
+ *    
+ *    Some features in this proxy:
+ *      - Robust I/O  
+ *      - Block SIGPIPE signals
+ *      - LRU eviction rule
+ *      - lock proper threads under concurrent requests
+ *      
+ */
+
 #include <stdio.h>
-#include "csapp.h"
+
+/* Recommended max cache and object sizes */
+#define MAX_CACHE_SIZE 1049000
+#define MAX_OBJECT_SIZE 102400
+
 /* You won't lose style points for including these long lines in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 static const char *accept_hdr = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n";
 static const char *accept_encoding_hdr = "Accept-Encoding: gzip, deflate\r\n";
 
+#include "csapp.h"
 
 void doit(int fd);
 void read_requesthdrs(rio_t *rp);
@@ -13,17 +46,39 @@ void clienterror(int fd, char *cause, char *errnum,
 		         char *shortmsg, char *longmsg);
 int powerten(int i);
 void proxy_init(void);
-
+void init_cache(void);
 void *thread(void *vargp);
+static void update_use(int *cache_use, int current, int len);
+static int load_cache(char *tag, char *response);
 
+static void save_cache(char *tag, char *response);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
 
+struct cache_line
+{
+    int valid;
+    char *tag;
+    char *block;
+};
 
+struct cache_set
+{
+    struct cache_line *line;
+    int *use;
+};
+
+struct cache
+{
+    struct cache_set *set;
+};
+
+static struct cache cache;
 
 // global variables
 sem_t mutex;
+static int set_num, line_num;
 
-//FILE* log;
+FILE* log;
 float alpha;
 int listen_port;
 char* fake_ip;
@@ -53,9 +108,9 @@ int main(int argc, char **argv)
     }
     strcpy(fake_ip, argv[2]);
     strcpy(www_ip, argv[3]);
-    printf("fake_ip = %s\n",fake_ip);
-    printf("www_ip = %s\n",www_ip);
-    sem_init(&mutex, 0, 1);
+    printf("fake-ip = %s\n",fake_ip);
+    printf("www-ip = %s\n",www_ip);
+    proxy_init();
     listenfd = Open_listenfd(argv[1]);
     while (1) {
 	    clientlen = sizeof(clientaddr);
@@ -63,9 +118,110 @@ int main(int argc, char **argv)
 	    *connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
         printf("Accepted connection from (%s, %s)\n", hostname, port);
+
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
+}
+
+/*
+ * proxy_init
+ * initialize the whole proxy including cache
+ */
+void proxy_init()
+{
+    sem_init(&mutex, 0, 1);
+    set_num = 1;
+    line_num = 10;
+    init_cache();
+}
+
+/*
+ * init_cache 
+ * initialize the cache, malloc space for the cache
+ */
+void init_cache()
+{
+    int i, j;
+    cache.set = malloc(sizeof (struct cache_set) * set_num);
+    for (i = 0; i < set_num; i++)
+    {
+        cache.set[i].line = malloc(sizeof(struct cache_line) * line_num);
+        cache.set[i].use = malloc(sizeof(int) * line_num);
+       for (j = 0; j < line_num; j++)
+       {
+           cache.set[i].use[j] = j;
+           cache.set[i].line[j].valid = 0;
+           cache.set[i].line[j].tag = malloc(MAXLINE);
+           cache.set[i].line[j].block = malloc(MAX_OBJECT_SIZE);
+       } 
+    }
+}
+
+/* 
+ * update_use - record cache usage condition for eviction
+ * record the recent use of cache store in the array 'use', LRU rule
+ */
+static void update_use(int *cache_use, int current, int len)
+{
+    int i, j;
+    for(i = 0; i < len; i++)
+    {
+        if(cache_use[i] == current) {
+             break;
+        }
+    }
+    for(j = i; j > 0; j--)
+    {
+        cache_use[j] = cache_use[j - 1];
+    }                               
+//#include <string.h>
+    cache_use[0] = current;
+}
+
+/*
+ * load_cache - load data from cache
+ * search desired cache and buffer the data in response
+ */
+static int load_cache(char *tag, char *response) 
+{
+    int index, i;
+    index = 0;
+    for (i = 0; i < line_num; i++) {
+        if(cache.set[index].line[i].valid == 1 && 
+          (strcmp(cache.set[index].line[i].tag, tag) == 0))
+        {
+            P(&mutex);
+            update_use(cache.set[index].use, i, line_num);
+            V(&mutex);
+            strcpy(response, cache.set[index].line[i].block);
+            break;
+        }
+    }
+    if (i == line_num) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+/* 
+ * save_cache - save data from server in cache
+ * copy response and tag into cache 
+ */ 
+static void save_cache(char *tag, char *response)
+{
+    int index, eviction;
+    index = 0;
+    eviction = cache.set[index].use[line_num - 1];
+    strcpy(cache.set[index].line[eviction].tag, tag);
+    strcpy(cache.set[index].line[eviction].block, response);
+//#include <string.h>
+    if (cache.set[index].line[eviction].valid == 0) {
+        cache.set[index].line[eviction].valid = 1;
+    }
+    update_use(cache.set[index].use, eviction, line_num);;
 }
 
 /*
@@ -75,12 +231,12 @@ int main(int argc, char **argv)
 /* $begin doit */
 void doit(int fd) 
 {
-    int serverfd, len;
+    int serverfd, len, object_len;
 
     int *port;
     char port2[10];
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
-    
+    char cache_buf[MAX_OBJECT_SIZE];// store cache data stuff
     char filename[MAXLINE];         // client request filename
     char hostname[MAXBUF];          // client request hostname
     char buf2ser[MAXLINE];          // proxy to server
@@ -98,7 +254,7 @@ void doit(int fd)
     memset(method, 0, sizeof(method));
     memset(buf, 0, sizeof(buf));
     memset(version, 0, sizeof(version));
-    
+    memset(cache_buf, 0, sizeof(cache_buf)); 
 
     // step1: obtain request from client and parse the request
     Rio_readinitb(&rio, fd);
@@ -127,37 +283,59 @@ void doit(int fd)
     strcpy(filename, uri);
     sprintf(buf2ser, "%s %s %s\r\n", method, filename, version);
     printf("proxy to server: %s\n", buf2ser);
-    //if(strcmp(hostname,))
+    if(strcmp(hostname,))
     // request header
     request_hdr(buf, buf2ser, hostname);
-
-    // step2 : from proxy to server
-    sprintf(port2, "%d", *port);
-    if((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0)
-    {
-        fprintf(stderr, "open server fd error\n");
-        return;
-    }
-
-    Rio_readinitb(&rio_ser, serverfd);
-
-    // send request to server
-    Rio_writen(serverfd, buf2ser, strlen(buf2ser));
-
-    // step3: recieve the response from the server
-
-    while ((len = rio_readnb(&rio_ser, ser_response,
-            sizeof(ser_response))) > 0) {
-
-        Rio_writen(fd, ser_response, len);
-        memset(ser_response, 0, sizeof(ser_response));
-    }
-    close(serverfd);
     
+    // check cache first
+    if (load_cache(uri, cache_buf) == 1) {
+        printf("Hit!\n");
+        if (rio_writen(fd, cache_buf, sizeof(cache_buf)) < 0) {
+            fprintf(stderr, "Error: cache load!\n");
+            return;
+        }
+        memset(cache_buf, 0, sizeof(cache_buf));
+    }
+    else {   
+    // if cache miss then forward the request to server
+    // step2 : from proxy to server
+        sprintf(port2, "%d", *port);
+        if((serverfd = open_clientfd_bind_fakeip(hostname, port2, fake_ip)) < 0)
+        {
+            fprintf(stderr, "open server fd error\n");
+            return;
+        }
+
+        Rio_readinitb(&rio_ser, serverfd);
+
+        // send request to server
+        Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+
+        // step3: recieve the response from the server and save data in cache
+        memset(cache_buf, 0, sizeof(cache_buf));
+        object_len = 0;
+
+        while ((len = rio_readnb(&rio_ser, ser_response, 
+                sizeof(ser_response))) > 0) {
+
+            Rio_writen(fd, ser_response, len);
+
+            strcat(cache_buf, ser_response);
+            object_len += len;
+            memset(ser_response, 0, sizeof(ser_response)); 
+        }    
+        if (object_len <= MAX_OBJECT_SIZE)
+        {
+            P(&mutex);
+            save_cache(uri, cache_buf);
+            V(&mutex);
+        }
+        close(serverfd);
+    }
 }
 /* $end doit */
 /* $begin open_clientfd_bind_fakeip */
-int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
+int open_clientfd_bind_fakeip(char *hostname, char *port, char *fake_ip) {
     int clientfd;
     struct addrinfo hints, *listp, *p;
     
@@ -188,8 +366,6 @@ int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
         return clientfd;
 }
 /* $end open_clientfd */
-
-
 /*
  * request_hdr - request header
  * if the request does not contain header, add request header
