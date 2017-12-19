@@ -22,7 +22,7 @@ void *thread(void *vargp);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
 void parse_bitrates(char *xml);
 void choose_bitrate(char *uri, char *uri_choose_bitrate);
-
+float char2float(char* c);
 
 // global variables
 sem_t mutex;
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "usage: %s <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
-    alpha = atoi(argv[1]);
+    alpha = char2float(argv[1]);
     listen_port = argv[2];
     fake_ip = argv[3];
     www_ip = argv[4];
@@ -77,7 +77,14 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
+float char2float(char* c){
+    if(strcmp(c, "0.1") == 0)
+        return 0.1;
+    if(strcmp(c, "0.5") == 0)
+        return 0.5;
+    if(strcmp(c, "0.9") == 0)
+        return 0.9;
+}
 /*
  * doit - handle one HTTP request/response transaction
  */
