@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "csapp.h"
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -181,6 +182,7 @@ void doit(int fd)
 /* $end doit */
 void parse_bitrates(char *xml){
     char* p;
+    int array_index = 0;
     for(p = xml; *p; p++){
         if(strncmp(p, "bitrate=\"", strlen("bitrate=\"")) == 0){
             p += strlen("bitrate=\"");
@@ -192,7 +194,10 @@ void parse_bitrates(char *xml){
                 p++;
             }
             tmp_bitrate[index] = '\0';
+            
             printf("tmp_bitrate=%s\n",tmp_bitrate);
+            bitrate[array_index]=atoi(tmp_bitrate);
+            printf("bitrate=%d\n",bitrate[array_index]);
         }
     }
 }
