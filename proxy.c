@@ -21,7 +21,7 @@ int powerten(int i);
 void *thread(void *vargp);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
 void parse_bitrates(char *xml);
-void choose_bitrate(char *uri, char *uri_choose_bitrate);
+int choose_bitrate(char *uri, char *uri_choose_bitrate);
 float char2float(char* c);
 
 // global variables
@@ -35,13 +35,15 @@ char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
-
+struct timeval start_epoch;
 struct timeval start;
 struct timeval end;
 float throughput_current = 0;
 float throughput_new = 0;
+FILE *fp;
 int main(int argc, char **argv) 
 {
+    gettimeofday(&start_epoch, NULL);
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
 
     int listenfd;
@@ -83,6 +85,7 @@ float char2float(char* c){
         return 0.5;
     if(strcmp(c, "0.9") == 0)
         return 0.9;
+    return 0;
 }
 /*
  * doit - handle one HTTP request/response transaction
@@ -199,7 +202,7 @@ void doit(int fd)
     }
     // other requests
     char uri_choose_bitrate[MAXLINE];
-    choose_bitrate(uri, uri_choose_bitrate);
+    int rate = choose_bitrate(uri, uri_choose_bitrate);
     
     strcpy(hostname,video_pku);
     sprintf(buf2ser, "%s %s %s\r\n", method, uri_choose_bitrate, version);
@@ -240,8 +243,35 @@ void doit(int fd)
         throughput_current = alpha * throughput_new + (1 - alpha) * throughput_current;
     printf("throughput_current = %.1f Kbps\n",throughput_current);
     close(serverfd);
+    
+    // output log
+    float time_epoch = (end.tv_sec-start_epoch.tv_sec)*1000000+(end.tv_usec-start_epoch.tv_usec);
+    time_epoch = time_epoch/1000000;
+    float time_duration = time_use/1000000;
+    
+    // tput = throughput_new;
+    // avg-tput = throughput_current;
+    // bitrate = rate
+    // server-ip = www_ip
+    // chunkname = uri_choose_bitrate
+    
+    if((fp = fopen("proxy_1.log","a+")) == NULL){
+        printf("file cannot be opened/n");
+        return;
+    }
+    // <time> <duration> <tput> <avg-tput> <bitrate> <server-ip> <chunkname>
+    fprintf(fp, "%f %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+            throughput_current, rate, www_ip, uri_choose_bitrate);
+    printf("%f %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+            throughput_current, rate, www_ip, uri_choose_bitrate);
+    fclose(fp);
+    
+    
+    
+    
+    
 }
-void choose_bitrate(char *uri, char *uri_choose_bitrate){
+int choose_bitrate(char *uri, char *uri_choose_bitrate){
     int i;
     int choosen_bitrate = 0;
     char bitrate_char[10];
@@ -259,7 +289,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     int len = 0;
 
     int flag = 0;
-    char uri_part_1[50], uri_part_2[50], uri_bitrate[50];
+    char uri_part_1[50], uri_part_2[50];
     for(p = uri; *p; p++){
         if(strncmp(p, "Seg", strlen("Seg")) == 0){
             flag = 1;
@@ -268,7 +298,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     if(flag == 0) {
         strcpy(uri_choose_bitrate, uri);
-        return;
+        return choosen_bitrate;
     }
     strcpy(uri_part_2, p);
     p--;
@@ -286,7 +316,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     strcat(uri_part_1, uri_part_2);
     printf("final_uri=%s\n",uri_part_1);
     strcpy(uri_choose_bitrate, uri_part_1);
-    return;
+    return choosen_bitrate;
 }
 /* $end doit */
 void parse_bitrates(char *xml){
