@@ -251,7 +251,10 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
             break;
         }
     }
+    if(choosen_bitrate == 0)
+        choosen_bitrate = bitrate_array[0];
     sprintf(bitrate_char, "%d", choosen_bitrate);
+    printf("choose bitrate = %s\n", bitrate_char);
     char *p;
     int len = 0;
 
