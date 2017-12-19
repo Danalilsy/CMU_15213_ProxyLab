@@ -34,6 +34,7 @@ char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
+char **bitrate_char;
 int bitrate_cnt = 0;
 
 struct timeval start;
@@ -226,10 +227,12 @@ void doit(int fd)
 }
 void choose_bitrate(char *uri, char *uri_choose_bitrate){
     int i;
+    int bitrate_index;
     int choosen_bitrate = 0;
     for(i = bitrate_cnt - 1; i >= 0; i--){
         if(throughput_current / 1.5 >= bitrate_array[i]){
             choosen_bitrate = bitrate_array[i];
+            bitrate_index = i;
         }
     }
     char *p;
@@ -250,7 +253,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     char *uri_bitrate;
     strncpy(uri_part_1, uri, len_1);
     strncpy(uri_part_2, p, len_2);
-    itoa(choosen_bitrate, uri_bitrate, 10);
+    strcpy(uri_bitrate, bitrate_char[bitrate_index]);
     printf("part1=%s\n",uri_part_1);
     printf("part2=%s\n",uri_part_2);
     printf("uri_choose_bitrate=%s\n",uri_bitrate);
@@ -271,6 +274,7 @@ void parse_bitrates(char *xml){
             }
             tmp_bitrate[index] = '\0';
             bitrate_array[array_index]=atoi(tmp_bitrate);
+            bitrate_char[array_index]=tmp_bitrate;
             array_index++;
             bitrate_cnt++;
         }
