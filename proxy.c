@@ -264,15 +264,16 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     len_1 = p - uri + 1;
     p=uri;
-    int i;
+    
     for(i=0;i<len_1;i++){
         uri_part_1[i]=uri[i];
     }
     
-    strcat(uri_part_1, "\0");
-    
+    //strcat(uri_part_1, "\0");
+    printf("uri=%s\n",uri);
     strcpy(uri_bitrate, bitrate_char);
     printf("part1=%s\n",uri_part_1);
+    printf("part1.size=%d\n", sizeof(uri_part_1));
     printf("part2=%s\n",uri_part_2);
     printf("uri_choose_bitrate=%s\n",uri_bitrate);
     strcat(uri_part_1, uri_choose_bitrate);
