@@ -247,7 +247,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     int len_1 = 0;
 
     int flag = 0;
-    char *uri_part_1, *uri_part_2, *uri_bitrate;
+    char uri_part_1[50], uri_part_2[50], uri_bitrate[50];
     for(p = uri; *p; p++){
         if(strncmp(p, "Seg", strlen("Seg")) == 0){
             flag = 1;
@@ -268,7 +268,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     for(i=0;i<len_1;i++){
         uri_part_1[i]=uri[i];
     }
-    
+    uri_part_1[i] = 0;
     //strcat(uri_part_1, "\0");
     
     printf("uri=%s\n",uri);
