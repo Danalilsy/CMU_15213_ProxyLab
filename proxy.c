@@ -123,7 +123,7 @@ void doit(int fd)
     parse_uri(uri, hostname, port);       
     strcpy(filename, uri);
     sprintf(buf2ser, "%s %s %s\r\n", method, filename, version);
-    printf("proxy to server: %s\n", buf2ser);
+    //printf("proxy to server: %s\n", buf2ser);
 
     // request header
     request_hdr(buf, buf2ser, hostname);
@@ -150,11 +150,34 @@ void doit(int fd)
 
         // step3: recieve the response from the server
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
-            Rio_writen(fd, ser_response, len);
-            printf("ser_response=\n%s\n",ser_response);
+            //Rio_writen(fd, ser_response, len);
             strcpy(xml, ser_response);
             parse_bitrates(xml);
-            for(int i=0;i<5;i++){
+            for(int i=0;i<10;i++){
+                printf("bitrate = %d\n",bitrate[i]);
+            }
+            memset(ser_response, 0, sizeof(ser_response));
+        }
+        close(serverfd);
+        ///////////////////////////////
+        sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
+        printf("proxy to server: %s\n", buf2ser);
+        if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+            fprintf(stderr, "open server fd error\n");
+            return;
+        }
+        
+        Rio_readinitb(&rio_ser, serverfd);
+        
+        // send request to server
+        Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+        
+        // step3: recieve the response from the server
+        while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
+            Rio_writen(fd, ser_response, len);
+            strcpy(xml, ser_response);
+            parse_bitrates(xml);
+            for(int i=0;i<10;i++){
                 printf("bitrate = %d\n",bitrate[i]);
             }
             memset(ser_response, 0, sizeof(ser_response));
@@ -169,7 +192,7 @@ void doit(int fd)
         }
         
         Rio_readinitb(&rio_ser, serverfd);
-        
+        printf("proxy to server: %s\n", buf2ser);
         // send request to server
         Rio_writen(serverfd, buf2ser, strlen(buf2ser));
         
