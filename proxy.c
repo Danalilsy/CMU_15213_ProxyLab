@@ -34,7 +34,7 @@ char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
-char *bitrate_char[MAXLINE];
+char bitrate_char[50][MAXLINE];
 int bitrate_cnt = 0;
 
 struct timeval start;
@@ -78,13 +78,12 @@ int main(int argc, char **argv)
     return 0;
 }
 float char2float(char* c){
-    return 0.1;
-//    if(strcmp(c, "0.1") == 0)
-//        return 0.1;
-//    if(strcmp(c, "0.5") == 0)
-//        return 0.5;
-//    if(strcmp(c, "0.9") == 0)
-//        return 0.9;
+    if(strcmp(c, "0.1") == 0)
+        return 0.1;
+    if(strcmp(c, "0.5") == 0)
+        return 0.5;
+    if(strcmp(c, "0.9") == 0)
+        return 0.9;
 }
 /*
  * doit - handle one HTTP request/response transaction
