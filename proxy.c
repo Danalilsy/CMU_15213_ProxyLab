@@ -202,7 +202,7 @@ void doit(int fd)
     }
     // other requests
     char uri_choose_bitrate[MAXLINE];
-    choose_bitrate(uri, uri_choose_bitrate);
+    //choose_bitrate(uri, uri_choose_bitrate);
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
