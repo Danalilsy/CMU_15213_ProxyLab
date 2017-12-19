@@ -21,11 +21,12 @@ int powerten(int i);
 void *thread(void *vargp);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
 void parse_bitrates(char *xml);
-
+void choose_bitrate(char *uri, char *uri_choose_bitrate);
 
 
 // global variables
 sem_t mutex;
+float alpha;
 char *listen_port;
 char *fake_ip;
 char *www_ip;
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "usage: %s <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
-    alpha = argv[1];
+    alpha = atoi(argv[1]);
     listen_port = argv[2];
     fake_ip = argv[3];
     www_ip = argv[4];
@@ -241,18 +242,18 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     p--;
     len_1 = p - uri;
-    while(*p >= '0' && *p =< '9'){
+    while(*p >= '0' && *p <= '9'){
         p--;
     }
     len_2 = sizeof(uri) - (p - uri);
     char *uri_part_1, *uri_part_2;
-    char *uri_choose_bitrate;
+    char *uri_bitrate;
     strncpy(uri_part_1, uri, len_1);
     strncpy(uri_part_2, p, len_2);
-    itoa(choosen_bitrate, uri_choose_bitrate, 10);
+    itoa(choosen_bitrate, uri_bitrate, 10);
     printf("part1=%s\n",uri_part_1);
     printf("part2=%s\n",uri_part_2);
-    printf("uri_choose_bitrate=%s\n",uri_choose_bitrate);
+    printf("uri_choose_bitrate=%s\n",uri_bitrate);
 }
 /* $end doit */
 void parse_bitrates(char *xml){
