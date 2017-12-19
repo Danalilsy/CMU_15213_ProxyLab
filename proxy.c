@@ -22,9 +22,8 @@ static void request_hdr(char *buf, char *buf2ser, char *hostname);
 
 // global variables
 sem_t mutex;
-static int set_num, line_num;
 
-FILE* log;
+//FILE* log;
 float alpha;
 int listen_port;
 char* fake_ip;
@@ -76,7 +75,7 @@ int main(int argc, char **argv)
 /* $begin doit */
 void doit(int fd) 
 {
-    int serverfd, len, object_len;
+    int serverfd, len;
 
     int *port;
     char port2[10];
