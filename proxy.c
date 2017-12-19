@@ -40,7 +40,7 @@ struct timeval end;
 float throughput_current = 0;
 float throughput_new = 0;
 FILE *fp;
-char *filename;
+char *log_filename;
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "usage: %s <log> <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
-    filename = argv[1];
+    log_filename = argv[1];
     alpha = char2float(argv[2]);
     listen_port = argv[3];
     fake_ip = argv[4];
@@ -253,7 +253,7 @@ void doit(int fd)
     // server-ip = www_ip
     // chunkname = uri_choose_bitrate
     
-    if((fp = fopen(filename,"a+")) == NULL){
+    if((fp = fopen(log_filename,"a+")) == NULL){
         printf("file cannot be opened/n");
         return;
     }
