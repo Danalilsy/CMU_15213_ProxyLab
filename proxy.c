@@ -254,11 +254,15 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     p--;
     len_1 = p - uri;
+    printf("len1=%d\n", len_1);
+    
     if(len_1 == sizeof(uri)) return;
     while(*p >= '0' && *p <= '9'){
         p--;
     }
     len_2 = sizeof(uri) - (p - uri);
+    printf("len2=%d\n", len_2);
+    printf("sizeof(uri)=%d\n", sizeof(uri));
     char *uri_part_1, *uri_part_2;
     char *uri_bitrate;
     strncpy(uri_part_1, uri, len_1);
