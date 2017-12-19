@@ -234,6 +234,7 @@ void doit(int fd)
     close(serverfd);
 }
 void choose_bitrate(char *uri, char *uri_choose_bitrate){
+    printf("cd choose bitrate\n");
     int i;
     int bitrate_index;
     int choosen_bitrate = 0;
@@ -253,6 +254,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     p--;
     len_1 = p - uri;
+    if(len_1 == sizeof(uri)) return;
     while(*p >= '0' && *p <= '9'){
         p--;
     }
