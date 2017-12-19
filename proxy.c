@@ -11,6 +11,7 @@ static const char *accept_encoding_hdr = "Accept-Encoding: gzip, deflate\r\n";
 
 void doit(int fd);
 int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip);
+int uri_found_f4m(char *uri, char *uri_nolist);
 void read_requesthdrs(rio_t *rp);
 int parse_uri(char *uri, char *hostname, int *port);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
@@ -26,6 +27,8 @@ char *listen_port;
 char *fake_ip;
 char *www_ip;
 char server_ip[MAXLINE];
+char *video_pku = "video.pku.edu.cn";
+
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -73,7 +76,7 @@ void doit(int fd)
 
     int *port;
     char port2[10]="8080";
-    char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+    char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], uri_nolist[MAXLINE], version[MAXLINE];
     char filename[MAXLINE];         // client request filename
     char hostname[MAXBUF];          // client request hostname
     char buf2ser[MAXLINE];          // proxy to server
@@ -122,17 +125,17 @@ void doit(int fd)
 
     // request header
     request_hdr(buf, buf2ser, hostname);
-    if(strcmp(hostname,"video.pku.edu.cn")==0){
+    if(strcmp(hostname, video_pku) == 0){
         strcpy(hostname,www_ip);
     }
     else{
-        fprintf(stderr, "url invalid.\n");
+        fprintf(stderr, "wrong hostname\n");
         return;
     }
-   
+    if (uri_found_f4m(uri, uri_nolist) != 0){
     // step2 : from proxy to server
     //sprintf(port2, "%d", *port);
-    if((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+    if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
     }
@@ -148,11 +151,24 @@ void doit(int fd)
         memset(ser_response, 0, sizeof(ser_response));
     }
     close(serverfd);
+    }
     
 }
 /* $end doit */
 
-
+int uri_found_f4m(char *uri, char *uri_nolist){
+    char uri_tmp[MAXLINE];
+    strcpy(uri_tmp, uri);
+    for (char *p = uri_tmp; *p; p++){
+        if (strncmp(p, ".f4m", strlen(".f4m")) == 0){
+            strcpy(p, "_nolist.f4m");
+            strcpy(uri_nolist, uri_tmp);
+            printf("uri find f4m! and convert to nolist\n")
+            return 1;
+        }
+    }
+    return 0;
+}
 /* $begin open_clientfd_bind_fake_ip */
 int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
     int clientfd;
