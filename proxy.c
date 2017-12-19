@@ -245,7 +245,7 @@ void doit(int fd)
     close(serverfd);
     
     // output log
-    float time_epoch = end.tv_sec+end.tv_usec/1000000;
+    int time_epoch = end.tv_sec+end.tv_usec/1000000;
     float time_duration = time_use/1000000;
     // tput = throughput_new;
     // avg-tput = throughput_current;
@@ -258,9 +258,9 @@ void doit(int fd)
         return;
     }
     // <time> <duration> <tput> <avg-tput> <bitrate> <server-ip> <chunkname>
-    fprintf(fp, "%f %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+    fprintf(fp, "%d %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
             throughput_current, rate, www_ip, uri_choose_bitrate);
-    printf("%f %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+    printf("%d %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
             throughput_current, rate, www_ip, uri_choose_bitrate);
     fclose(fp);
     
