@@ -198,6 +198,7 @@ void doit(int fd)
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
+        printf("finfish .f4m!\n");
         return;
     }
     // other requests
@@ -223,14 +224,14 @@ void doit(int fd)
     gettimeofday(&end, NULL);
     float time_use = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
     printf("time_use = %.1f us\n",time_use);
-    printf("chunk_size = %f Kb\n",(float)chunk_size*8/1000);
+    printf("chunk_size = %.1f Kb\n",(float)chunk_size*8/1000);
     throughput_new=(float)chunk_size*8000/time_use;
-    printf("throughput_new = %f Kbps\n",throughput_new);
+    printf("throughput_new = %.1f Kbps\n",throughput_new);
     if(throughput_current == 0)
         throughput_current = bitrate_array[0];
     else
         throughput_current = alpha * throughput_new + (1 - alpha) * throughput_current;
-    printf("throughput_current = %f Kbps\n",throughput_current);
+    printf("throughput_current = %.1f Kbps\n",throughput_current);
     close(serverfd);
 }
 void choose_bitrate(char *uri, char *uri_choose_bitrate){
