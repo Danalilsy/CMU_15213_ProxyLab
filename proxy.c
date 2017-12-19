@@ -263,7 +263,10 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
             break;
         }
     }
-    if(flag == 0) return;
+    if(flag == 0) {
+        strcpy(uri_choose_bitrate, uri);
+        return;
+    }
     strcpy(uri_part_2, p);
     p--;
     while(*p >= '0' && *p <= '9')
