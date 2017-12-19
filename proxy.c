@@ -30,7 +30,6 @@ char *www_ip;
 char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
-char xml_nolist[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
 int main(int argc, char **argv) 
@@ -154,8 +153,8 @@ void doit(int fd)
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             strcpy(xml, ser_response);
             parse_bitrates(xml);
-            printf("xml_nolist=\n%s",xml_nolist);
-            Rio_writen(fd, xml_nolist, sizeof(xml_nolist));//sizeof
+            
+            //Rio_writen(fd, xml_nolist, sizeof(xml_nolist));//sizeof
             int i;
             for(i=0;i<bitrate_cnt;i++){
                 printf("bitrate = %d\n",bitrate_array[i]);
@@ -163,6 +162,36 @@ void doit(int fd)
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
+        ///
+        ///
+        sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
+        request_hdr(buf, buf2ser, hostname);
+        if(strcmp(hostname, video_pku) == 0){
+            strcpy(hostname,www_ip);
+        }
+        else{
+            fprintf(stderr, "wrong hostname\n");
+            return;
+        }
+        
+        if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+            fprintf(stderr, "open server fd error\n");
+            return;
+        }
+        
+        Rio_readinitb(&rio_ser, serverfd);
+        
+        // send request to server
+        Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+        
+        // step3: recieve the response from the server
+        while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
+            Rio_writen(fd, ser_response, len);
+            printf("no_list=\n%s\n",ser_response);
+            memset(ser_response, 0, sizeof(ser_response));
+        }
+        close(serverfd);
+        
     }
     // other requests
     else {
@@ -189,7 +218,6 @@ void doit(int fd)
 void parse_bitrates(char *xml){
     char* p;
     int array_index = 0;
-    int media_index = 0;
     for(p = xml; *p; p++){
         if(strncmp(p, "bitrate=\"", strlen("bitrate=\"")) == 0){
             p += strlen("bitrate=\"");
@@ -206,14 +234,6 @@ void parse_bitrates(char *xml){
             bitrate_cnt++;
         }
     }
-    for(p = xml; *p; p++){
-        if(strncmp(p,"<media",strlen("<media")) == 0){
-            break;
-        }
-        media_index++;
-    }
-    strncpy(xml_nolist, xml, media_index);
-    strcat(xml_nolist, "\n</manifest>\r\n\0");
 }
 
 
