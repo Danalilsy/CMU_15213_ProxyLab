@@ -78,12 +78,13 @@ int main(int argc, char **argv)
     return 0;
 }
 float char2float(char* c){
-    if(strcmp(c, "0.1") == 0)
-        return 0.1;
-    if(strcmp(c, "0.5") == 0)
-        return 0.5;
-    if(strcmp(c, "0.9") == 0)
-        return 0.9;
+    return 0.1;
+//    if(strcmp(c, "0.1") == 0)
+//        return 0.1;
+//    if(strcmp(c, "0.5") == 0)
+//        return 0.5;
+//    if(strcmp(c, "0.9") == 0)
+//        return 0.9;
 }
 /*
  * doit - handle one HTTP request/response transaction
