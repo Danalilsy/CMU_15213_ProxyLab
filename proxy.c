@@ -164,6 +164,7 @@ void doit(int fd)
         close(serverfd);
         ///
         ///
+        strcpy(hostname,video_pku);
         sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
         request_hdr(buf, buf2ser, hostname);
         if(strcmp(hostname, video_pku) == 0){
