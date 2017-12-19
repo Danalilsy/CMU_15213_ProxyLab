@@ -186,7 +186,7 @@ void parse_bitrates(char *xml){
             p += strlen("bitrate=\"");
             char tmp_bitrate[10];
             int index = 0;
-            while(*p != "\""){
+            while(*p != '\"'){
                 tmp_bitrate[index] = *p;
                 index++;
                 p++;
