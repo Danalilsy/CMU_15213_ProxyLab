@@ -5,7 +5,7 @@
 # rule). Autolab will execute the command "make" on your specific 
 # Makefile to build your proxy from sources.
 #
-CC = g++
+CC = gcc
 CFLAGS = -g -Wall
 LDFLAGS = -lpthread
 

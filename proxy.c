@@ -40,6 +40,7 @@ struct timeval end;
 float throughput_current = 0;
 float throughput_new = 0;
 FILE *fp;
+char *filename;
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -54,13 +55,14 @@ int main(int argc, char **argv)
 
     /* Check command line args */
     if (argc != 5) {
-	    fprintf(stderr, "usage: %s <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
+	    fprintf(stderr, "usage: %s <log> <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
-    alpha = char2float(argv[1]);
-    listen_port = argv[2];
-    fake_ip = argv[3];
-    www_ip = argv[4];
+    filename = argv[1];
+    alpha = char2float(argv[2]);
+    listen_port = argv[3];
+    fake_ip = argv[4];
+    www_ip = argv[5];
     printf("fake_ip = %s\n", fake_ip);
     printf("www_ip = %s\n", www_ip);
     sem_init(&mutex, 0, 1);
@@ -251,7 +253,7 @@ void doit(int fd)
     // server-ip = www_ip
     // chunkname = uri_choose_bitrate
     
-    if((fp = fopen("proxy_1.log","a+")) == NULL){
+    if((fp = fopen(filename,"a+")) == NULL){
         printf("file cannot be opened/n");
         return;
     }
