@@ -157,13 +157,16 @@ void doit(int fd)
     }
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
+        printf("1\n");
         // request .f4m from server, but do not give it to client
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
             return;
         }
+        printf("1\n");
         Rio_readinitb(&rio_ser, serverfd);
         Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+        printf("1\n");
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             strcpy(xml, ser_response);
             parse_bitrates(xml);
@@ -174,7 +177,7 @@ void doit(int fd)
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
-        
+        printf("1\n");
         // request _nolist.f4m from server, give it to client this time
         strcpy(hostname,video_pku);
         sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
@@ -190,6 +193,7 @@ void doit(int fd)
             fprintf(stderr, "open server fd error\n");
             return;
         }
+        printf("1\n");
         Rio_readinitb(&rio_ser, serverfd);
         Rio_writen(serverfd, buf2ser, strlen(buf2ser));
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
