@@ -164,7 +164,7 @@ int uri_found_f4m(char *uri, char *uri_nolist){
         if (strncmp(p, ".f4m", strlen(".f4m")) == 0){
             strcpy(p, "_nolist.f4m");
             strcpy(uri_nolist, uri_tmp);
-            printf("uri find f4m! and convert to nolist\n")
+            printf("uri find f4m! and convert to nolist\n");
             return 1;
         }
     }
