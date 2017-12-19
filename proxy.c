@@ -191,7 +191,7 @@ void parse_bitrates(char *xml){
                 index++;
                 p++;
             }
-            
+            tmp_bitrate[index] = '\0';
             printf("tmp_bitrate=%s\n",tmp_bitrate);
         }
     }
