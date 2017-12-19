@@ -28,7 +28,8 @@ char *fake_ip;
 char *www_ip;
 char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
-
+char xml[MAXLINE];
+int bitrate[50] = {0};
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -150,6 +151,8 @@ void doit(int fd)
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             Rio_writen(fd, ser_response, len);
             printf("ser_response=\n%s\n",ser_response);
+            strcpy(xml, ser_response);
+            parse_bitrates(xml);
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
@@ -176,7 +179,22 @@ void doit(int fd)
     
 }
 /* $end doit */
-
+void parse_bitrates(char *xml){
+    char* p;
+    for(p = xml; *p; p++){
+        if(strncmp(p, "bitrate=\"", strlen("bitrate=\"")) == 0){
+            p += strlen("bitrate=\"");
+            char tmp_bitrate[10];
+            int index = 0;
+            while(*p != '"'){
+                tmp_bitrate[index] = *p;
+                index++;
+                p++;
+            }
+            printf("tmp_bitrate=%s\n",tmp_bitrate);
+        }
+    }
+}
 int uri_found_f4m(char *uri, char *uri_nolist){
     char uri_tmp[MAXLINE];
     strcpy(uri_tmp, uri);
