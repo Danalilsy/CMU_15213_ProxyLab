@@ -200,6 +200,17 @@ void doit(int fd)
     // other requests
     char uri_choose_bitrate[MAXLINE];
     choose_bitrate(uri, uri_choose_bitrate);
+    
+    strcpy(hostname,video_pku);
+    sprintf(buf2ser, "%s %s %s\r\n", method, uri_choose_bitrate, version);
+    request_hdr(buf, buf2ser, hostname);
+    if(strcmp(hostname, video_pku) == 0){
+        strcpy(hostname,www_ip);
+    }
+    else{
+        fprintf(stderr, "wrong hostname\n");
+        return;
+    }
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
@@ -232,19 +243,17 @@ void doit(int fd)
 }
 void choose_bitrate(char *uri, char *uri_choose_bitrate){
     int i;
-    int bitrate_index;
     int choosen_bitrate = 0;
     char bitrate_char[10];
     for(i = bitrate_cnt - 1; i >= 0; i--){
         if(throughput_current / 1.5 >= bitrate_array[i]){
             choosen_bitrate = bitrate_array[i];
-            bitrate_index = i;
             break;
         }
     }
     sprintf(bitrate_char, "%d", choosen_bitrate);
     char *p;
-    int len_1 = 0;
+    int len = 0;
 
     int flag = 0;
     char uri_part_1[50], uri_part_2[50], uri_bitrate[50];
@@ -254,32 +263,24 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
             break;
         }
     }
-   
     if(flag == 0) return;
     strcpy(uri_part_2, p);
     p--;
-    
-    while(*p >= '0' && *p <= '9'){
+    while(*p >= '0' && *p <= '9')
         p--;
-    }
-    len_1 = p - uri + 1;
-    p=uri;
-    
-    for(i=0;i<len_1;i++){
-        uri_part_1[i]=uri[i];
+    len = p - uri + 1;
+    for(i = 0; i < len; i++){
+        uri_part_1[i] = uri[i];
     }
     uri_part_1[i] = 0;
     //strcat(uri_part_1, "\0");
     
     printf("uri=%s\n",uri);
-    strcpy(uri_bitrate, bitrate_char);
-    printf("part1=%s\n",uri_part_1);
-    printf("part1.size=%d\n", sizeof(uri_part_1));
-    printf("part2=%s\n",uri_part_2);
-    printf("uri_choose_bitrate=%s\n",uri_bitrate);
-    strcat(uri_part_1, uri_choose_bitrate);
+    strcat(uri_part_1, bitrate_char);
     strcat(uri_part_1, uri_part_2);
     printf("final_uri=%s\n",uri_part_1);
+    strcpy(uri_choose_bitrate, uri_part_1);
+    return;
 }
 /* $end doit */
 void parse_bitrates(char *xml){
