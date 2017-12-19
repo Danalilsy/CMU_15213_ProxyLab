@@ -159,7 +159,8 @@ void doit(int fd)
 int uri_found_f4m(char *uri, char *uri_nolist){
     char uri_tmp[MAXLINE];
     strcpy(uri_tmp, uri);
-    for (char *p = uri_tmp; *p; p++){
+    char *p;
+    for (p = uri_tmp; *p; p++){
         if (strncmp(p, ".f4m", strlen(".f4m")) == 0){
             strcpy(p, "_nolist.f4m");
             strcpy(uri_nolist, uri_tmp);
