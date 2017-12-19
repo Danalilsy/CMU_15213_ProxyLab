@@ -30,7 +30,8 @@ char *www_ip;
 char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
-int bitrate[50] = {0};
+int bitrate_array[50] = {0};
+int bitrate_cnt = 0;
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -154,8 +155,8 @@ void doit(int fd)
             strcpy(xml, ser_response);
             parse_bitrates(xml);
             int i;
-            for(i=0;i<10;i++){
-                printf("bitrate = %d\n",bitrate[i]);
+            for(i=0;i<bitrate_cnt;i++){
+                printf("bitrate = %d\n",bitrate_array[i]);
             }
             memset(ser_response, 0, sizeof(ser_response));
         }
@@ -218,8 +219,9 @@ void parse_bitrates(char *xml){
                 p++;
             }
             tmp_bitrate[index] = '\0';
-            bitrate[array_index]=atoi(tmp_bitrate);
+            bitrate_array[array_index]=atoi(tmp_bitrate);
             array_index++;
+            bitrate_cnt++;
         }
     }
 }
