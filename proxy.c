@@ -34,7 +34,7 @@ char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
-char **bitrate_char;
+char *bitrate_char[MAXLINE];
 int bitrate_cnt = 0;
 
 struct timeval start;
