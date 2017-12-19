@@ -153,13 +153,16 @@ void doit(int fd)
             //Rio_writen(fd, ser_response, len);
             strcpy(xml, ser_response);
             parse_bitrates(xml);
-            for(int i=0;i<10;i++){
+            int i;
+            for(i=0;i<10;i++){
                 printf("bitrate = %d\n",bitrate[i]);
             }
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
+        
         ///////////////////////////////
+        
         sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
         printf("proxy to server: %s\n", buf2ser);
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
@@ -175,11 +178,6 @@ void doit(int fd)
         // step3: recieve the response from the server
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             Rio_writen(fd, ser_response, len);
-            strcpy(xml, ser_response);
-            parse_bitrates(xml);
-            for(int i=0;i<10;i++){
-                printf("bitrate = %d\n",bitrate[i]);
-            }
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
