@@ -25,6 +25,7 @@ sem_t mutex;
 char *listen_port;
 char *fake_ip;
 char *www_ip;
+char server_ip[MAXLINE];
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -131,7 +132,7 @@ void doit(int fd)
    
     // step2 : from proxy to server
     //sprintf(port2, "%d", *port);
-    if((serverfd = open_clientfd(hostname, port2, fake_ip)) < 0){
+    if((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
     }
