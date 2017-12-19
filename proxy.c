@@ -154,6 +154,9 @@ void doit(int fd)
             printf("ser_response=\n%s\n",ser_response);
             strcpy(xml, ser_response);
             parse_bitrates(xml);
+            for(int i=0;i<5;i++){
+                printf("bitrate = %d\n",bitrate[i]);
+            }
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
@@ -194,10 +197,8 @@ void parse_bitrates(char *xml){
                 p++;
             }
             tmp_bitrate[index] = '\0';
-            
-            printf("tmp_bitrate=%s\n",tmp_bitrate);
             bitrate[array_index]=atoi(tmp_bitrate);
-            printf("bitrate=%d\n",bitrate[array_index]);
+            array_index++;
         }
     }
 }
