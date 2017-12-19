@@ -133,25 +133,41 @@ void doit(int fd)
         return;
     }
     if (uri_found_f4m(uri, uri_nolist) != 0){
-    // step2 : from proxy to server
-    //sprintf(port2, "%d", *port);
+        // step2 : from proxy to server
+        //sprintf(port2, "%d", *port);
+        if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+            fprintf(stderr, "open server fd error\n");
+            return;
+        }
+
+        Rio_readinitb(&rio_ser, serverfd);
+
+        // send request to server
+        Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+
+        // step3: recieve the response from the server
+        while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
+            Rio_writen(fd, ser_response, len);
+            memset(ser_response, 0, sizeof(ser_response));
+        }
+        close(serverfd);
+    }
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
         return;
     }
-
+    
     Rio_readinitb(&rio_ser, serverfd);
-
+    
     // send request to server
     Rio_writen(serverfd, buf2ser, strlen(buf2ser));
-
+    
     // step3: recieve the response from the server
     while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
         Rio_writen(fd, ser_response, len);
         memset(ser_response, 0, sizeof(ser_response));
     }
     close(serverfd);
-    }
     
 }
 /* $end doit */
