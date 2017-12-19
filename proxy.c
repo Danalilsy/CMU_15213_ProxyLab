@@ -207,13 +207,13 @@ void parse_bitrates(char *xml){
         }
     }
     for(p = xml; *p; p++){
-        media_index++;
         if(strncmp(p,"<media",strlen("<media")) == 0){
             break;
         }
+        media_index++;
     }
     strncpy(xml_nolist, xml, media_index);
-    strcat(xml_nolist, "\n</manifest>");
+    strcat(xml_nolist, "\n</manifest>\r\n\0");
 }
 int uri_found_f4m(char *uri, char *uri_nolist){
     char uri_tmp[MAXLINE];
