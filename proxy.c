@@ -30,6 +30,7 @@ char *www_ip;
 char server_ip[MAXLINE];
 char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
+char xml_nolist[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
 int main(int argc, char **argv) 
@@ -153,7 +154,7 @@ void doit(int fd)
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             strcpy(xml, ser_response);
             parse_bitrates(xml);
-            printf("xml=\n%s",xml);
+            printf("xml_nolist=\n%s",xml_nolist);
             Rio_writen(fd, ser_response, len);//sizeof
             int i;
             for(i=0;i<bitrate_cnt;i++){
@@ -188,6 +189,7 @@ void doit(int fd)
 void parse_bitrates(char *xml){
     char* p;
     int array_index = 0;
+    int media_index = 0;
     for(p = xml; *p; p++){
         if(strncmp(p, "bitrate=\"", strlen("bitrate=\"")) == 0){
             p += strlen("bitrate=\"");
@@ -204,6 +206,14 @@ void parse_bitrates(char *xml){
             bitrate_cnt++;
         }
     }
+    for(p = xml; *p; p++){
+        media_index++;
+        if(strncmp(p,"<media",strlen("<media")) == 0){
+            break;
+        }
+    }
+    strncpy(xml_nolist, xml, media_index);
+    strcat(xml_nolist, "\n</manifest>");
 }
 int uri_found_f4m(char *uri, char *uri_nolist){
     char uri_tmp[MAXLINE];
