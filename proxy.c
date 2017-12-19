@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     pthread_t tid;
 
     /* Check command line args */
-    if (argc != 5) {
+    if (argc != 6) {
 	    fprintf(stderr, "usage: %s <log> <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
 	    exit(1);
     }
