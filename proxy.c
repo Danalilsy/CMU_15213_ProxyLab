@@ -210,7 +210,8 @@ void doit(int fd)
     }
     gettimeofday(&end, NULL);
     float time_use = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
-    printf("time_use = %f us\n",time_use);
+    printf("time_use = %.1f us\n",time_use);
+    printf("chunk_size = %f Kb\n",(float)chunk_size*8/1000);
     throughput_new=(float)chunk_size*8000/time_use;
     printf("throughput_new = %f Kbps\n",throughput_new);
     close(serverfd);
@@ -271,13 +272,12 @@ int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
         /* Create a socket descriptor */
         if ((clientfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
             continue; /* Socket failed, try the next */
-        printf("%x  %x %x\n",p->ai_family, p->ai_socktype, p->ai_protocol);
         /* Bind fake_ip*/
         struct sockaddr_in saddr;
         memset((void *) &saddr, 0, sizeof(saddr));
         saddr.sin_family = AF_INET;
         saddr.sin_port = htons(0);
-        saddr.sin_addr.s_addr = inet_addr(fake_ip); //bind ip
+        saddr.sin_addr.s_addr = inet_addr(fake_ip);
         if (bind(clientfd, (struct sockaddr *) &saddr, sizeof(saddr)) < 0) {
             fprintf(stderr, "Bind clientfd error.\n");
             Close(clientfd);
