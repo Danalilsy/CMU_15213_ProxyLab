@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "csapp.h"
+#include <sys/time.h>
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
@@ -19,6 +20,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
 int powerten(int i);
 void *thread(void *vargp);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
+void parse_bitrates(char *xml);
 
 
 
@@ -32,6 +34,11 @@ char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
+
+struct timeval start;
+struct timeval end;
+float throughput_current = 0;
+float throughput_new = 0;
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -102,6 +109,8 @@ void doit(int fd)
     Rio_readinitb(&rio, fd);
     if (!Rio_readlineb(&rio, buf, MAXLINE))  
         return;
+    gettimeofday(&start, NULL);
+    
     printf("request from client: %s\n", buf);
 
     // parse request into method, uri, version
@@ -137,33 +146,25 @@ void doit(int fd)
     }
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
-        // step2 : from proxy to server
-        //sprintf(port2, "%d", *port);
+        // request .f4m from server, but do not give it to client
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
             return;
         }
-
         Rio_readinitb(&rio_ser, serverfd);
-
-        // send request to server
         Rio_writen(serverfd, buf2ser, strlen(buf2ser));
-
-        // step3: recieve the response from the server
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             strcpy(xml, ser_response);
             parse_bitrates(xml);
-            
-            //Rio_writen(fd, xml_nolist, sizeof(xml_nolist));//sizeof
             int i;
-            for(i=0;i<bitrate_cnt;i++){
+            for(i = 0; i < bitrate_cnt; i++){
                 printf("bitrate = %d\n",bitrate_array[i]);
             }
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
-        ///
-        ///
+        
+        // request _nolist.f4m from server, give it to client this time
         strcpy(hostname,video_pku);
         sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
         request_hdr(buf, buf2ser, hostname);
@@ -174,45 +175,46 @@ void doit(int fd)
             fprintf(stderr, "wrong hostname\n");
             return;
         }
-        
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
             return;
         }
-        
         Rio_readinitb(&rio_ser, serverfd);
-        
-        // send request to server
         Rio_writen(serverfd, buf2ser, strlen(buf2ser));
-        
-        // step3: recieve the response from the server
         while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
             Rio_writen(fd, ser_response, len);
             printf("no_list=\n%s\n",ser_response);
             memset(ser_response, 0, sizeof(ser_response));
         }
         close(serverfd);
-        
+        return;
     }
     // other requests
-    else {
-        if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
-            fprintf(stderr, "open server fd error\n");
-            return;
-        }
-        
-        Rio_readinitb(&rio_ser, serverfd);
-        printf("proxy to server: %s\n", buf2ser);
-        // send request to server
-        Rio_writen(serverfd, buf2ser, strlen(buf2ser));
-        
-        // step3: recieve the response from the server
-        while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
-            Rio_writen(fd, ser_response, len);
-            memset(ser_response, 0, sizeof(ser_response));
-        }
-        close(serverfd);
+    
+    if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+        fprintf(stderr, "open server fd error\n");
+        return;
     }
+        
+    Rio_readinitb(&rio_ser, serverfd);
+    printf("proxy to server: %s\n", buf2ser);
+    // send request to server
+    Rio_writen(serverfd, buf2ser, strlen(buf2ser));
+        
+    // step3: recieve the response from the server
+    int chunk_size = 0;
+    while ((len = rio_readnb(&rio_ser, ser_response,sizeof(ser_response))) > 0) {
+        chunk_size += len;
+        Rio_writen(fd, ser_response, len);
+        memset(ser_response, 0, sizeof(ser_response));
+    }
+    gettimeofday(&end, NULL);
+    float time_use = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
+    printf("time_use = %f us\n",time_use);
+    throughput_new=(float)chunk_size*8000/time_use;
+    printf("throughput_new = %f Kbps\n",throughput_new);
+    close(serverfd);
+    
     
 }
 /* $end doit */
@@ -353,8 +355,8 @@ void read_requesthdrs(rio_t *rp)
     Rio_readlineb(rp, buf, MAXLINE);
     printf("%s", buf);
     while(strcmp(buf, "\r\n")) {      
-	Rio_readlineb(rp, buf, MAXLINE);
-	printf("%s", buf);
+        Rio_readlineb(rp, buf, MAXLINE);
+        printf("%s", buf);
     }
     return;
 }
