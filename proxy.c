@@ -239,6 +239,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
         if(throughput_current / 1.5 >= bitrate_array[i]){
             choosen_bitrate = bitrate_array[i];
             bitrate_index = i;
+            break;
         }
     }
     sprintf(bitrate_char, "%d", choosen_bitrate);
@@ -262,15 +263,21 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
         p--;
     }
     len_1 = p - uri + 1;
-    printf("len1=%d\n", len_1);
+    p=uri;
+    int i;
+    for(i=0;i<len_1;i++){
+        uri_part_1[i]=uri[i];
+    }
     
-    strncpy(uri_part_1, uri, len_1);
     strcat(uri_part_1, "\0");
     
     strcpy(uri_bitrate, bitrate_char);
     printf("part1=%s\n",uri_part_1);
     printf("part2=%s\n",uri_part_2);
     printf("uri_choose_bitrate=%s\n",uri_bitrate);
+    strcat(uri_part_1, uri_choose_bitrate);
+    strcat(uri_part_1, uri_part_2);
+    printf("final_uri=%s\n",uri_part_1);
 }
 /* $end doit */
 void parse_bitrates(char *xml){
