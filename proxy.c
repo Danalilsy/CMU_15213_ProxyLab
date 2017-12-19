@@ -186,11 +186,12 @@ void parse_bitrates(char *xml){
             p += strlen("bitrate=\"");
             char tmp_bitrate[10];
             int index = 0;
-            while(*p != 34){
+            while(*p >= '0' && *p <= '9'){
                 tmp_bitrate[index] = *p;
                 index++;
                 p++;
             }
+            
             printf("tmp_bitrate=%s\n",tmp_bitrate);
         }
     }
